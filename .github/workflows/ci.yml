@@ -1,0 +1,55 @@
+name: CI - Test & Build (Django)
+
+on:
+  push:
+    branches: ["main"]       
+  pull_request:
+    branches: ["main"]       
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest             
+    
+    steps:
+      - name: Checkout du repository
+        uses: actions/checkout@v4
+      
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"         
+      
+      - name: Installer dépendances Python
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Créer .env pour les tests
+        run: |
+          echo "DEBUG=True" > .env
+          echo "SECRET_KEY=test-secret-key" >> .env
+          echo "DATABASE_URL=sqlite:///db.sqlite3" >> .env
+      
+      - name: Appliquer migrations
+        run: |
+          python manage.py migrate --noinput
+      
+      - name: Collect static files
+        run: |
+          python manage.py collectstatic --noinput
+      
+      - name: Lancer les tests Pytest
+        run: |
+          pytest -v --disable-warnings --maxfail=1
+      
+      - name: Analyse du code (Flake8)
+        run: |
+          pip install flake8
+          flake8 .
+        continue-on-error: true
+      
+      - name: Analyse statique (mypy)
+        run: |
+          pip install mypy
+          mypy .
+        continue-on-error: true
