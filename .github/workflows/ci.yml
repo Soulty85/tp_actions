@@ -36,7 +36,7 @@ jobs:
       
       - name: Lancer les tests Pytest
         run: |
-          pytest -v --disable-warnings --maxfail=1
+          python manage.py test
       
       - name: Analyse du code (Flake8)
         run: |
